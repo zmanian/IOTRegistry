@@ -11,7 +11,7 @@ It is generated from these files:
 It has these top-level messages:
 	Owner
 	Alias
-	Thing
+	Things
 	Spec
 */
 package IOTRegistryStore
@@ -42,16 +42,16 @@ func (m *Alias) Reset()         { *m = Alias{} }
 func (m *Alias) String() string { return proto.CompactTextString(m) }
 func (*Alias) ProtoMessage()    {}
 
-type Thing struct {
+type Things struct {
 	Alias     []string `protobuf:"bytes,1,rep,name=Alias" json:"Alias,omitempty"`
 	OwnerName string   `protobuf:"bytes,2,opt,name=OwnerName" json:"OwnerName,omitempty"`
 	Data      string   `protobuf:"bytes,3,opt,name=Data" json:"Data,omitempty"`
 	SpecName  string   `protobuf:"bytes,4,opt,name=SpecName" json:"SpecName,omitempty"`
 }
 
-func (m *Thing) Reset()         { *m = Thing{} }
-func (m *Thing) String() string { return proto.CompactTextString(m) }
-func (*Thing) ProtoMessage()    {}
+func (m *Things) Reset()         { *m = Things{} }
+func (m *Things) String() string { return proto.CompactTextString(m) }
+func (*Things) ProtoMessage()    {}
 
 type Spec struct {
 	OwnerName string `protobuf:"bytes,2,opt,name=OwnerName" json:"OwnerName,omitempty"`

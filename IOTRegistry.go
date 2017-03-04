@@ -138,8 +138,8 @@ func (t *IOTRegistry) Invoke(stub shim.ChaincodeStubInterface, function string, 
 		store.Pubkey = registerNameArgs.PubKey
 		storeBytes, err := proto.Marshal(&store)
 		if err != nil {
-			fmt.Printf("Error marshalling variable of type IOTRegistryStore.Aliases{}: (%v)\n", err.Error())
-			return nil, fmt.Errorf("Error marshalling variable of type IOTRegistryStore.Aliases{}: (%v)\n", err.Error())
+			fmt.Printf("Error marshalling variable of type IOTRegistryStore.Identities{}: (%v)\n", err.Error())
+			return nil, fmt.Errorf("Error marshalling variable of type IOTRegistryStore.Identities{}: (%v)\n", err.Error())
 		}
 
 		err = stub.PutState("OwnerName: "+registerNameArgs.OwnerName, storeBytes)
@@ -150,8 +150,8 @@ func (t *IOTRegistry) Invoke(stub shim.ChaincodeStubInterface, function string, 
 	/*
 		registerThing does, essentially, two things.
 		1.	puts a "Thing: <Nonce>" state to the ledger, indexed by the nonce.
-		|		-a thing contains a string slice of Aliases, an OwnerName, an arbitrary string of data, and the name of a specification.
-		2.	for each element of the Aliases string slice, puts an "Alias: <identity>" state to the ledger, indexed by identity.
+		|		-a thing contains a string slice of identities, an OwnerName, an arbitrary string of data, and the name of a specification.
+		2.	for each element of the Identities string slice, puts an "Alias: <identity>" state to the ledger, indexed by identity.
 		|		-an Alias contains a nonce, which can be used to access its parent "thing"
 		TX struct: 		RegisterThingTX
 		Store structs: 	Things, Alias
@@ -202,15 +202,15 @@ func (t *IOTRegistry) Invoke(stub shim.ChaincodeStubInterface, function string, 
 			return nil, fmt.Errorf("OwnerName (%s) is not registered\n", registerThingArgs.OwnerName)
 		}
 
-		//check if any Aliases exist
-		//we're checking if any Aliases are registered as ownernames but not if they are registered as aliases
-		for _, identity := range registerThingArgs.Aliases {
+		//check if any identities exist
+		//we're checking if any identities are registered as ownernames but not if they are registered as aliases
+		for _, identity := range registerThingArgs.Identities {
 			aliasCheckBytes, err := stub.GetState("OwnerName: " + identity)
 			if err != nil {
 				fmt.Printf("Could not get identity: (%s) State\n", identity)
 				return nil, fmt.Errorf("Could not get identity: (%s) State\n", identity)
 			}
-			//throw error if any of the Aliases already exist
+			//throw error if any of the identities already exist
 			if len(aliasCheckBytes) != 0 {
 				fmt.Printf("Ownername: (%s) is already in registry\n", identity)
 				return nil, fmt.Errorf("Ownername: (%s) is already in registry\n", identity)
@@ -231,7 +231,7 @@ func (t *IOTRegistry) Invoke(stub shim.ChaincodeStubInterface, function string, 
 
 		//TODO review later
 		message := registerThingArgs.OwnerName
-		for _, identity := range registerThingArgs.Aliases {
+		for _, identity := range registerThingArgs.Identities {
 			message += ":" + identity
 		}
 		message += ":" + registerThingArgs.Data
@@ -242,7 +242,7 @@ func (t *IOTRegistry) Invoke(stub shim.ChaincodeStubInterface, function string, 
 			return nil, fmt.Errorf("Error verifying signature (%s)", ownerSig)
 		}
 
-		for _, identity := range registerThingArgs.Aliases {
+		for _, identity := range registerThingArgs.Identities {
 
 			alias := IOTRegistryStore.Alias{}
 			alias.Nonce = registerThingArgs.Nonce
@@ -255,8 +255,8 @@ func (t *IOTRegistry) Invoke(stub shim.ChaincodeStubInterface, function string, 
 			stub.PutState("Alias: "+identity, aliasStoreBytes)
 		}
 
-		store := IOTRegistryStore.Thing{}
-		store.Alias = registerThingArgs.Aliases
+		store := IOTRegistryStore.Things{}
+		store.Alias = registerThingArgs.Identities
 		store.OwnerName = registerThingArgs.OwnerName
 		store.Data = registerThingArgs.Data
 		store.SpecName = registerThingArgs.Spec
@@ -354,11 +354,11 @@ func (t *IOTRegistry) Invoke(stub shim.ChaincodeStubInterface, function string, 
 
 /* declares, initializes, and marshalls struct containing owner information to JSON */
 func ownerNameToJSON(ownerName string, pubKey []byte) ([]byte, error) {
-	type JSONAliases struct {
+	type JSONIdentities struct {
 		OwnerName string
 		Pubkey    string
 	}
-	jsonOwner := JSONAliases{}
+	jsonOwner := JSONIdentities{}
 	jsonOwner.OwnerName = ownerName
 	jsonOwner.Pubkey = hex.EncodeToString(pubKey)
 
@@ -413,7 +413,7 @@ func (t *IOTRegistry) Query(stub shim.ChaincodeStubInterface, function string, a
 		if len(args) != 1 {
 			return nil, fmt.Errorf("No argument specified\n")
 		}
-		thing := IOTRegistryStore.Thing{}
+		thing := IOTRegistryStore.Things{}
 		thingNonce := args[0]
 		thingBytes, err := stub.GetState("Thing: " + thingNonce)
 		if err != nil {

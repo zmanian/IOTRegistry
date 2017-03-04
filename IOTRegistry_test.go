@@ -86,22 +86,20 @@ func generateRegisterNameSig(ownerName string, data string, privateKeyStr string
 	if err != nil {
 		return "", fmt.Errorf("error signing message (%s) with private key (%s)", message, privateKeyStr)
 	}
-	fmt.Printf("\n\nNAME\nsigned message: (%s)\nprivate key (%s)\nsignature (%s)\n\n", message, privateKeyStr, hex.EncodeToString(sig.Serialize()))
-
 	return hex.EncodeToString(sig.Serialize()), nil
 }
 
 /*
 	generates a signature for registering a thing based on private key and message
 */
-func generateRegisterThingSig(ownerName string, aliases []string, spec string, data string, privateKeyStr string) (string, error) {
+func generateRegisterThingSig(ownerName string, identities []string, spec string, data string, privateKeyStr string) (string, error) {
 	privKeyByte, err := hex.DecodeString(privateKeyStr)
 	if err != nil {
 		return "", fmt.Errorf("error decoding hex encoded private key (%s)", privateKeyStr)
 	}
 	privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), privKeyByte)
 	message := ownerName
-	for _, identity := range aliases {
+	for _, identity := range identities {
 		message += ":" + identity
 	}
 	message += ":" + data
@@ -111,8 +109,6 @@ func generateRegisterThingSig(ownerName string, aliases []string, spec string, d
 	if err != nil {
 		return "", fmt.Errorf("error signing message (%s) with private key (%s)", message, privateKeyStr)
 	}
-	fmt.Printf("\n\nTHING\nsigned message: (%s)\nprivate key (%s)\nsignature (%s)\n\n", message, privateKeyStr, hex.EncodeToString(sig.Serialize()))
-
 	return hex.EncodeToString(sig.Serialize()), nil
 }
 
@@ -133,7 +129,6 @@ func generateRegisterSpecSig(specName string, ownerName string, data string, pri
 		return "", fmt.Errorf("error signing message (%s) with private key (%s)", message, privateKeyStr)
 	}
 
-	fmt.Printf("\n\nSPEC\nsigned message: (%s)\nprivate key (%s)\nsignature (%s)\n\n", message, privateKeyStr, hex.EncodeToString(sig.Serialize()))
 	return hex.EncodeToString(sig.Serialize()), nil
 }
 
@@ -183,20 +178,20 @@ func registerOwner(t *testing.T, stub *shim.MockStub, name string, data string,
 }
 
 /*
-	registers a store type "Things" to ledger and an "Alias" store type for each member of string slice aliases by calling to Invoke()
+	registers a store type "Things" to ledger and an "Alias" store type for each member of string slice identities by calling to Invoke()
 */
-func registerThing(t *testing.T, stub *shim.MockStub, nonce []byte, aliases []string,
+func registerThing(t *testing.T, stub *shim.MockStub, nonce []byte, identities []string,
 	name string, spec string, data string, privateKeyString string) error {
 
 	registerThing := IOTRegistryTX.RegisterThingTX{}
 
 	registerThing.Nonce = nonce
-	registerThing.Aliases = aliases
+	registerThing.Identities = identities
 	registerThing.OwnerName = name
 	registerThing.Spec = spec
 
 	//create signature
-	hexThingSig, err := generateRegisterThingSig(name, aliases, spec, data, privateKeyString)
+	hexThingSig, err := generateRegisterThingSig(name, identities, spec, data, privateKeyString)
 	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
@@ -340,8 +335,8 @@ func checkQuery(t *testing.T, stub *shim.MockStub, function string, index string
 		for i, element := range jsonMap["Alias"].([]interface{}) {
 			aliases[i] = element.(string)
 		}
-		if !(reflect.DeepEqual(aliases, expected.aliases)) {
-			return fmt.Errorf("\nAlias got       (%x)\nAlias expected: (%x)\n", jsonMap["Alias"], expected.aliases)
+		if !(reflect.DeepEqual(aliases, expected.identities)) {
+			return fmt.Errorf("\nAlias got       (%x)\nAlias expected: (%x)\n", jsonMap["Alias"], expected.identities)
 		}
 		if jsonMap["OwnerName"] != expected.ownerName {
 			return fmt.Errorf("\nOwnerName got       (%s)\nOwnerName expected: (%s)\n", jsonMap["OwnerName"], expected.ownerName)
@@ -370,7 +365,7 @@ type registryTest struct {
 	data             string
 	nonceBytes       []byte
 	specName         string
-	aliases          []string
+	identities       []string
 }
 
 /*
@@ -425,7 +420,7 @@ func TestIOTRegistryChaincode(t *testing.T) {
 		if err != nil {
 			t.Errorf("%v\n", err)
 		}
-		err = registerThing(t, stub, test.nonceBytes, test.aliases, test.ownerName, test.specName, test.data, test.privateKeyString)
+		err = registerThing(t, stub, test.nonceBytes, test.identities, test.ownerName, test.specName, test.data, test.privateKeyString)
 		if err != nil {
 			t.Errorf("%v\n", err)
 		}

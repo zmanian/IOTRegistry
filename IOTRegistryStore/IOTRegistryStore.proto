@@ -15,7 +15,7 @@ message Owner{
 message Alias{
   bytes Nonce =1;
 }
-message Things{
+message Thing{
   repeated string Alias =1;
   string OwnerName =2;
   string Data =3;

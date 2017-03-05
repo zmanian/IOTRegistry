@@ -154,7 +154,7 @@ func (t *IOTRegistry) Invoke(stub shim.ChaincodeStubInterface, function string, 
 		2.	for each element of the Identities string slice, puts an "Alias: <identity>" state to the ledger, indexed by identity.
 		|		-an Alias contains a nonce, which can be used to access its parent "thing"
 		TX struct: 		RegisterThingTX
-		Store structs: 	Things, Alias
+		Store structs: 	Thing, Alias
 	*/
 	case "registerThing":
 		registerThingArgs := IOTRegistryTX.RegisterThingTX{}
@@ -255,7 +255,7 @@ func (t *IOTRegistry) Invoke(stub shim.ChaincodeStubInterface, function string, 
 			stub.PutState("Alias: "+identity, aliasStoreBytes)
 		}
 
-		store := IOTRegistryStore.Things{}
+		store := IOTRegistryStore.Thing{}
 		store.Alias = registerThingArgs.Identities
 		store.OwnerName = registerThingArgs.OwnerName
 		store.Data = registerThingArgs.Data
@@ -413,7 +413,7 @@ func (t *IOTRegistry) Query(stub shim.ChaincodeStubInterface, function string, a
 		if len(args) != 1 {
 			return nil, fmt.Errorf("No argument specified\n")
 		}
-		thing := IOTRegistryStore.Things{}
+		thing := IOTRegistryStore.Thing{}
 		thingNonce := args[0]
 		thingBytes, err := stub.GetState("Thing: " + thingNonce)
 		if err != nil {

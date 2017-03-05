@@ -178,7 +178,7 @@ func registerOwner(t *testing.T, stub *shim.MockStub, name string, data string,
 }
 
 /*
-	registers a store type "Things" to ledger and an "Alias" store type for each member of string slice identities by calling to Invoke()
+	registers a store type "Thing" to ledger and an "Alias" store type for each member of string slice identities by calling to Invoke()
 */
 func registerThing(t *testing.T, stub *shim.MockStub, nonce []byte, identities []string,
 	name string, spec string, data string, privateKeyString string) error {
